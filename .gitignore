@@ -60,4 +60,5 @@ typings/
 # misc
 .DS_Store
 routing-env/
+.idea/
 

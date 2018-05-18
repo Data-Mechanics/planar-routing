@@ -111,6 +111,9 @@ def build_line_records(line_list, point_list):
 
 
 def _build_adjacency_lists(line_list, point):
+    """
+    Construct adjacency list for an individual point.
+    """
 
     adjacent = []
 
@@ -131,6 +134,9 @@ def _build_adjacency_lists(line_list, point):
 
 
 def build_adjacency_lists(line_list, point_list):
+    """
+    Construct list of adjacent points for every point.
+    """
 
     ret = []
 
@@ -143,6 +149,9 @@ def build_adjacency_lists(line_list, point_list):
 
 
 def build_full_data(datapoints):
+    """
+    Render parsed data as json.
+    """
 
     ret = \
         {

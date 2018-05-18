@@ -7,13 +7,39 @@
   <body style="width:100%; height:100%; margin:0; padding:0;">
 	<div id="leaflet" style="width:100vw; height:100vh;"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.3/leaflet.js"></script>
-    <script>
+    <script type="text/javascript" src="src/parsedData.js"></script>
+    <script type="text/javascript" src="src/utils.js"></script>
+    <script type="text/javascript">
 
       var leaflet = L.map('leaflet').setView([42.35492416678054, -71.06451283091724], 15);
 
+      var tileLayerOne = L.tileLayer
+      (
+        "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
+        {maxZoom:18, attribution:'', id:'mapbox.light'}
+      );
+
+      tileLayerOne.addTo(leaflet);
+
+      var nodes = [];
+      var node_idx = 0;
+      var clicks = 0;
+      var route = {
+      	"start": 999,
+        "end": 999,
+        "path": []
+      };
+
+      var nodeLayer = L.geoJson(obj,
+        {
+          filter: function (feature, layer) { return true; },
+          style: function () { return {"color": randomColor()}; },
+          pointToLayer: pointLayer
+        }
+      );
+
+      nodeLayer.addTo(leaflet);
+
     </script>
-    <script type='text/javascript' src="src/index.js"></script>
-
-
   </body>
 </html>

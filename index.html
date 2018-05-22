@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.3/leaflet.js"></script>
     <script type="text/javascript" src="src/parsedData.js"></script>
     <script type="text/javascript" src="src/utils.js"></script>
+    <script type="text/javascript" src="src/routing.js"></script>
     <script type="text/javascript">
 
       var leaflet = L.map('leaflet').setView([42.35492416678054, -71.06451283091724], 15);
@@ -20,15 +21,6 @@
       );
 
       tileLayerOne.addTo(leaflet);
-
-      var nodes = [];
-      var node_idx = 0;
-      var clicks = 0;
-      var route = {
-      	"start": 999,
-        "end": 999,
-        "path": []
-      };
 
       var nodeLayer = L.geoJson(obj,
         {

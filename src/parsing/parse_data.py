@@ -67,6 +67,22 @@ def build_line_entry(coords, start, end):
     return entry
 
 
+def sort_next_lists(next_list, adjacent):
+
+    ret = []
+    if adjacent is not None:
+        for nl in next_list:
+            for pt in adjacent:
+                if pt in nl:
+                    ret.append((nl, pt))
+                    break
+    else:
+        for nl in next_list:
+            ret.append(sorted(nl))
+
+    return ret
+
+
 def build_point_entry(coords, next_list, idx, adjacent=None):
     """
     Add an ID to a Point.
@@ -77,7 +93,7 @@ def build_point_entry(coords, next_list, idx, adjacent=None):
             "coordinates": coords,
             "properties":
                 {
-                    "next": next_list,
+                    "next": sort_next_lists(next_list, adjacent),
                     "adjacent": adjacent
                 },
             "type": "Point",
@@ -189,12 +205,4 @@ if __name__ == '__main__':
         out_data = build_full_data(full_data)
 
         out_file.write(out_data)
-
-
-
-
-
-
-
-
 

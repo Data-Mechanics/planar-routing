@@ -37,9 +37,6 @@ Array.prototype.contains = function(needle)
 
 function router(route_dict, nodes)
 {
-	/*
-	TODO -- check for cycles when next.length < adjacent.length --
-	 */
 
 	var current_node = route_dict.start;
 
@@ -110,11 +107,10 @@ function pointLayer(feature, latlng)
 			route.end = node.nodeid;
 			route.path.push(route.start);
 			var path = router(route, nodes);
-			console.log(path);
 
 			for (var k = 0; k < route.path.length; k++)
 			{
-				nodes[route.path[k]].vis.setStyle({fillColor: "#FF0000", color: "#FF0000"});
+				nodes[path[k]].vis.setStyle({fillColor: "#FF0000", color: "#FF0000"});
 			}
 
 			route.path = [];

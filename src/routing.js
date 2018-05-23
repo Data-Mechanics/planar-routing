@@ -49,7 +49,29 @@ function router(route_dict, nodes)
 		{
 			if (nodes[current_node].dat.properties.next[i][0].contains(route_dict.end))
 			{
-				var next_node = nodes[current_node].dat.properties.next[i][1];
+				var current_list = nodes[current_node].dat.properties.next[i];
+				var next_node;
+				var found = false;
+				var idx;
+
+				for (var j = 1; j < current_list.length; j++)
+				{
+					if (current_list[j] === route_dict.end)
+					{
+						found = true;
+						idx = j;
+					}
+				}
+
+				if (found)
+				{
+					next_node = current_list[idx];
+				}
+				else
+				{
+					next_node = current_list[1];
+				}
+
 				route_dict.path.push(next_node);
 				current_node = next_node;
 				break;
@@ -99,6 +121,14 @@ function pointLayer(feature, latlng)
 		}
 		else
 		{
+			for (var i = 0; i < nodes.length; i++)
+			{
+				if (i !== node.nodeid)
+				{
+					nodes[i].vis.setStyle({fillColor: "#FFFFFF", color: "#FFFFFF"});
+				}
+			}
+
 			clicks = 0;
 			route.start = node.nodeid;
 			route.end = null;

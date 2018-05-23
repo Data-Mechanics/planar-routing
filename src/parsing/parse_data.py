@@ -67,18 +67,82 @@ def build_line_entry(coords, start, end):
     return entry
 
 
+def _build_written_line_entry(coords):
+    """
+    Removes start and end points from line entry before writing to file.
+    """
+
+    entry = \
+        {
+            "geometry":
+                {
+                    "coordinates": coords,
+                    "type": "LineString"
+                },
+            "type": "Feature"
+        }
+
+    return entry
+
+
+def build_written_line_entry(line_list):
+
+    ret = []
+
+    for line in line_list:
+        ret.append(_build_written_line_entry(line["geometry"]["coordinates"]))
+
+    return ret
+
+
+def clean_next_lists(next_list):
+    """
+    Transform a sorted list of numbers into a sequence of ranges
+    which represent where numbers follow one another consecutively.
+    """
+
+    ret = []
+    start = None
+    current = None
+    sequence = False
+
+    for i in range(len(next_list)):
+        if not sequence:
+            start = next_list[i]
+            current = next_list[i]
+            sequence = True
+        else:
+            if next_list[i] == current + 1:
+                current = next_list[i]
+            else:
+
+                if start == current:
+                    seq = [start, "None"]
+                else:
+                    seq = [start, current, "None"]
+
+                ret.extend(seq)
+                sequence = False
+
+    return ret
+
+
 def sort_next_lists(next_list, adjacent):
 
     ret = []
     if adjacent is not None:
         for nl in next_list:
-            for pt in adjacent:
-                if pt in nl:
-                    ret.append((nl, pt))
-                    break
+            if nl:
+                temp = [clean_next_lists(nl)]
+                for pt in adjacent:
+                    if pt in nl:
+                        temp.append(pt)
+
+                ret.append(temp)
     else:
         for nl in next_list:
-            ret.append(sorted(nl))
+            if nl:
+                ret.append(sorted(nl))
 
     return ret
 
@@ -93,8 +157,7 @@ def build_point_entry(coords, next_list, idx, adjacent=None):
             "coordinates": coords,
             "properties":
                 {
-                    "next": sort_next_lists(next_list, adjacent),
-                    "adjacent": adjacent
+                    "next": sort_next_lists(next_list, adjacent)
                 },
             "type": "Point",
             "idx": idx
@@ -197,8 +260,9 @@ if __name__ == '__main__':
     points_with_ids = assign_point_ids(points)
     line_records = build_line_records(lines, points_with_ids)
     points_with_adjacency = build_adjacency_lists(line_records, points_with_ids)
+    filtered_line_records = build_written_line_entry(line_records)
 
-    full_data = line_records + points_with_adjacency
+    full_data = filtered_line_records + points_with_adjacency
 
     with open(sys.argv[2], 'w', encoding='utf8') as out_file:
 

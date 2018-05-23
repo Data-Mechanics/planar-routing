@@ -1,6 +1,11 @@
 import json
 import sys
 
+from shapely.geometry import Polygon
+import numpy as np
+from scipy.spatial import ConvexHull
+import scipy
+
 
 def find_point(coords, point_list):
     """
@@ -192,6 +197,60 @@ def build_adjacency_lists(line_list, point_list):
     return ret
 
 
+def extract_polygon(points_list, next_list):
+
+    lats, longs = [], []
+    ret = []
+
+    for pt in next_list:
+        lats.append(points_list[pt]["coordinates"][0])
+        longs.append(points_list[pt]["coordinates"][1])
+
+    all_points = np.column_stack((lats, longs))
+    hull_points = ConvexHull(all_points)
+
+    verts = hull_points.vertices
+
+    for v in verts:
+        ret.append(next_list[v])
+
+    return ret
+
+
+def _point_list_to_polygon(points_list, point):
+
+    ret_polys = []
+
+    for next_list in point["properties"]["next"]:
+
+        filtered_list = []
+
+        if len(next_list[0]) > 2:
+            poly_points = extract_polygon(points_list, next_list[0])
+        else:
+            poly_points = next_list[0]
+
+        filtered_list.append(poly_points)
+
+        for i in range(len(next_list)):
+            if i != 0:
+                filtered_list.append(next_list[i])
+
+        ret_polys.append(filtered_list)
+
+    return ret_polys
+
+
+def point_list_to_polygon(point_list):
+
+    ret = []
+
+    for point in point_list:
+        ret.append(_point_list_to_polygon(point_list, point))
+
+    return ret
+
+
 def build_full_data(datapoints):
     """
     Render parsed data as json.
@@ -226,6 +285,8 @@ if __name__ == '__main__':
     line_records = build_line_records(lines, points_with_ids)
     points_with_adjacency = build_adjacency_lists(line_records, points_with_ids)
     filtered_line_records = build_written_line_entry(line_records)
+
+    filtered_points = point_list_to_polygon(points_with_adjacency)
 
     full_data = filtered_line_records + points_with_adjacency
 

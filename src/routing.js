@@ -11,6 +11,10 @@ var route =
 
 Array.prototype.contains = function(needle)
 {
+	/*
+	Determine if an element is in an array. Array
+	is assumed to be sorted in ascending order.
+	 */
 
 	var min = 0;
 	var max = this.length - 1;
@@ -37,6 +41,9 @@ Array.prototype.contains = function(needle)
 
 function router(route_dict, nodes)
 {
+	/*
+	Follow adjacent nodes from routing table until destination is reached.
+	 */
 
 	var current_node = route_dict.start;
 
@@ -51,6 +58,10 @@ function router(route_dict, nodes)
 				var found = false;
 				var idx;
 
+				/*
+				Some entries have more than one adjacent node that correspond the same path.
+				If one of those nodes is the destination node, select it. Else, take either.
+				 */
 				for (var j = 1; j < current_list.length; j++)
 				{
 					if (current_list[j] === route_dict.end)
@@ -131,7 +142,6 @@ function pointLayer(feature, latlng)
 		}
 
 		clicks++;
-
 	});
 
 	return node;

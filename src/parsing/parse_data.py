@@ -17,7 +17,7 @@ def find_point(coords, point_list):
 
 def filter_coords(coords):
     """
-    Remove duplicate coordinates in LineString data.
+    Remove duplicate coordinates in LineString data; preserve coordinate ordering.
     """
 
     unique = []
@@ -67,25 +67,24 @@ def build_line_entry(coords, start, end):
     return entry
 
 
-def _build_written_line_entry(coords):
-    """
-    Removes start and end points from line entry before writing to file.
-    """
-
-    entry = \
-        {
-            "geometry":
-                {
-                    "coordinates": coords,
-                    "type": "LineString"
-                },
-            "type": "Feature"
-        }
-
-    return entry
-
-
 def build_written_line_entry(line_list):
+    """
+    Remove start and end points from all line entries before writing to file.
+    """
+
+    def _build_written_line_entry(coords):
+
+        entry = \
+            {
+                "geometry":
+                    {
+                        "coordinates": coords,
+                        "type": "LineString"
+                    },
+                "type": "Feature"
+            }
+
+        return entry
 
     ret = []
 
@@ -95,45 +94,17 @@ def build_written_line_entry(line_list):
     return ret
 
 
-def clean_next_lists(next_list):
-    """
-    Transform a sorted list of numbers into a sequence of ranges
-    which represent where numbers follow one another consecutively.
-    """
-
-    ret = []
-    start = None
-    current = None
-    sequence = False
-
-    for i in range(len(next_list)):
-        if not sequence:
-            start = next_list[i]
-            current = next_list[i]
-            sequence = True
-        else:
-            if next_list[i] == current + 1:
-                current = next_list[i]
-            else:
-
-                if start == current:
-                    seq = [start, "None"]
-                else:
-                    seq = [start, current, "None"]
-
-                ret.extend(seq)
-                sequence = False
-
-    return ret
-
-
 def sort_next_lists(next_list, adjacent):
+    """
+    Sort a next list, append adjacent nodes if present.
+    """
 
     ret = []
+
     if adjacent is not None:
         for nl in next_list:
             if nl:
-                temp = [clean_next_lists(nl)]
+                temp = [nl]
                 for pt in adjacent:
                     if pt in nl:
                         temp.append(pt)
@@ -189,33 +160,27 @@ def build_line_records(line_list, point_list):
     return ret
 
 
-def _build_adjacency_lists(line_list, point):
-    """
-    Construct adjacency list for an individual point.
-    """
-
-    adjacent = []
-
-    idx = point["idx"]
-
-    for line in line_list:
-
-        if line["properties"]["start"] == idx:
-            adjacent.append(line["properties"]["end"])
-        elif line["properties"]["end"] == idx:
-            adjacent.append(line["properties"]["start"])
-        else:
-            continue
-
-    ret = build_point_entry(point["coordinates"], point["properties"]["next"], point["idx"], adjacent)
-
-    return ret
-
-
 def build_adjacency_lists(line_list, point_list):
     """
     Construct list of adjacent points for every point.
     """
+
+    def _build_adjacency_lists(ll, pt):
+
+        adjacent = []
+
+        idx = pt["idx"]
+
+        for line in ll:
+
+            if line["properties"]["start"] == idx:
+                adjacent.append(line["properties"]["end"])
+            elif line["properties"]["end"] == idx:
+                adjacent.append(line["properties"]["start"])
+            else:
+                continue
+
+        return build_point_entry(pt["coordinates"], pt["properties"]["next"], pt["idx"], adjacent)
 
     ret = []
 

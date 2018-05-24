@@ -142,6 +142,22 @@ def build_point_entry(coords, next_list, idx, adjacent=None):
     return entry
 
 
+def build_poly_point(coords, next_list, idx):
+
+    entry = \
+        {
+            "coordinates": coords,
+            "properties":
+                {
+                    "next": next_list
+                },
+            "type": "Point",
+            "idx": idx
+        }
+
+    return entry
+
+
 def build_line_records(line_list, point_list):
     """
     Determine start and end points for each line.
@@ -238,7 +254,7 @@ def _point_list_to_polygon(points_list, point):
 
         ret_polys.append(filtered_list)
 
-    return ret_polys
+    return build_poly_point(point["coordinates"], ret_polys, point["idx"])
 
 
 def point_list_to_polygon(point_list):
@@ -288,7 +304,7 @@ if __name__ == '__main__':
 
     filtered_points = point_list_to_polygon(points_with_adjacency)
 
-    full_data = filtered_line_records + points_with_adjacency
+    full_data = filtered_line_records + filtered_points
 
     with open(sys.argv[2], 'w', encoding='utf8') as out_file:
 

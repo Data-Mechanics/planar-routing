@@ -39,10 +39,89 @@ Array.prototype.contains = function(needle)
 	return false;
 };
 
+Array.prototype.containsUnsorted = function(needle)
+{
+
+	for (var i = 0; i < this.length; i++)
+	{
+		if (this[i] === needle)
+		{
+			return true;
+		}
+	}
+
+	return false;
+};
+
+Array.prototype.containsPoly = function(needle)
+{
+	/*
+	Determine if an element is within a polygon represented
+	by the points of an array. Points are assumed to be in
+	either clockwise or counterclockwise order.
+	 */
+
+	var numVert = this.length;
+	var x = needle[0];
+	var y = needle[1];
+	var inside = false;
+
+	for (var i = 0, j = numVert - 1; i < numVert; j = i++)
+	{
+		var xi = this[i][0], yi = this[i][1];
+		var xj = this[j][0], yj = this[j][1];
+
+		var intersect = ( (yi > y) !== (yj > y) ) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+		if (intersect)
+		{
+			inside = !inside;
+		}
+	}
+
+	return inside;
+};
+
+
+function updateRoute(current_list, route_dict)
+{
+	var found = false;
+	var next_node;
+	var idx;
+
+	/*
+	Some entries have more than one adjacent node that correspond the same path.
+	If one of those nodes is the destination node, select it. Else, take either.
+	 */
+	for (var j = 1; j < current_list.length; j++)
+	{
+		if (current_list[j] === route_dict.end)
+		{
+			found = true;
+			idx = j;
+		}
+	}
+
+	if (found)
+	{
+		next_node = current_list[idx];
+	}
+	else
+	{
+		next_node = current_list[1];
+	}
+
+	return next_node;
+}
+
+
 function router(route_dict, nodes)
 {
 	/*
 	Follow adjacent nodes from routing table until destination is reached.
+	 */
+
+	/*
+	TODO - still producing cycles in some cases
 	 */
 
 	var current_node = route_dict.start;
@@ -51,38 +130,50 @@ function router(route_dict, nodes)
 	{
 		for (var i = 0; i < nodes[current_node].dat.properties.next.length; i++)
 		{
-			if (nodes[current_node].dat.properties.next[i][0].contains(route_dict.end))
+			/*
+			First check all nodes in next set to rule out destination nodes that are vertices.
+			 */
+			var current_list;
+			var next_node;
+			var destCoords = nodes[route_dict.end].dat.coordinates;
+
+			if (nodes[current_node].dat.properties.next[i][0].containsUnsorted(route_dict.end))
 			{
-				var current_list = nodes[current_node].dat.properties.next[i];
-				var next_node;
-				var found = false;
-				var idx;
-
-				/*
-				Some entries have more than one adjacent node that correspond the same path.
-				If one of those nodes is the destination node, select it. Else, take either.
-				 */
-				for (var j = 1; j < current_list.length; j++)
-				{
-					if (current_list[j] === route_dict.end)
-					{
-						found = true;
-						idx = j;
-					}
-				}
-
-				if (found)
-				{
-					next_node = current_list[idx];
-				}
-				else
-				{
-					next_node = current_list[1];
-				}
-
+				current_list = nodes[current_node].dat.properties.next[i];
+				next_node = updateRoute(current_list, route_dict);
 				route_dict.path.push(next_node);
 				current_node = next_node;
 				break;
+			}
+			/*
+			Then test if the destination nodes is inside the polygon represented by the vertices.
+			 */
+			else
+			{
+
+				var k;
+
+				var nextLength = nodes[current_node].dat.properties.next[i][0].length;
+
+				if (nextLength > 2)
+				{
+					var nextCoords = [];
+
+					for (k = 0; k < nextLength; k++)
+					{
+						var vertNode = nodes[current_node].dat.properties.next[i][0][k];
+						nextCoords.push(nodes[vertNode].dat.coordinates);
+					}
+
+					if (nextCoords.containsPoly(destCoords))
+					{
+						current_list = nodes[current_node].dat.properties.next[i];
+						next_node = updateRoute(current_list, route_dict);
+						route_dict.path.push(next_node);
+						current_node = next_node;
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -104,10 +195,13 @@ function pointLayer(feature, latlng)
 
 	node_idx++;
 
+
 	node.on('click', function()
 	{
 
-		nodes[node.nodeid].vis.setStyle({fillColor: "#FF0000", color: "#FF0000"});
+		console.log(clicks);
+
+		nodes[node.nodeid].vis.setStyle({fillColor: "#F00FF0", color: "#F00FF0"});
 
 		if (clicks === 0)
 		{
@@ -143,6 +237,7 @@ function pointLayer(feature, latlng)
 
 		clicks++;
 	});
+
 
 	return node;
 }

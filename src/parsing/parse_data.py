@@ -1,10 +1,9 @@
 import json
 import sys
 
-from shapely.geometry import Polygon
 import numpy as np
+
 from scipy.spatial import ConvexHull
-import scipy
 
 
 def find_point(coords, point_list):
@@ -214,6 +213,10 @@ def build_adjacency_lists(line_list, point_list):
 
 
 def extract_polygon(points_list, next_list):
+    """
+    Transform a set of points to a convex hull.
+    Return the vertices of the convex hull.
+    """
 
     lats, longs = [], []
     ret = []
@@ -233,31 +236,34 @@ def extract_polygon(points_list, next_list):
     return ret
 
 
-def _point_list_to_polygon(points_list, point):
-
-    ret_polys = []
-
-    for next_list in point["properties"]["next"]:
-
-        filtered_list = []
-
-        if len(next_list[0]) > 2:
-            poly_points = extract_polygon(points_list, next_list[0])
-        else:
-            poly_points = next_list[0]
-
-        filtered_list.append(poly_points)
-
-        for i in range(len(next_list)):
-            if i != 0:
-                filtered_list.append(next_list[i])
-
-        ret_polys.append(filtered_list)
-
-    return build_poly_point(point["coordinates"], ret_polys, point["idx"])
-
-
 def point_list_to_polygon(point_list):
+    """
+    For each point in the point_list, transform the lists in
+    its next_list to a convex hull formed by its points.
+    """
+
+    def _point_list_to_polygon(points_list, pt):
+
+        ret_polys = []
+
+        for next_list in pt["properties"]["next"]:
+
+            filtered_list = []
+
+            if len(next_list[0]) > 2:
+                poly_points = extract_polygon(points_list, next_list[0])
+            else:
+                poly_points = next_list[0]
+
+            filtered_list.append(poly_points)
+
+            for i in range(len(next_list)):
+                if i != 0:
+                    filtered_list.append(next_list[i])
+
+            ret_polys.append(filtered_list)
+
+        return build_poly_point(pt["coordinates"], ret_polys, pt["idx"])
 
     ret = []
 
@@ -301,9 +307,7 @@ if __name__ == '__main__':
     line_records = build_line_records(lines, points_with_ids)
     points_with_adjacency = build_adjacency_lists(line_records, points_with_ids)
     filtered_line_records = build_written_line_entry(line_records)
-
     filtered_points = point_list_to_polygon(points_with_adjacency)
-
     full_data = filtered_line_records + filtered_points
 
     with open(sys.argv[2], 'w', encoding='utf8') as out_file:

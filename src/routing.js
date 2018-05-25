@@ -92,12 +92,12 @@ function updateRoute(current_list, route_dict)
 	Some entries have more than one adjacent node that correspond the same path.
 	If one of those nodes is the destination node, select it. Else, take either.
 	 */
-	for (var j = 1; j < current_list.length; j++)
+	for (var i = 1; i < current_list.length; i++)
 	{
-		if (current_list[j] === route_dict.end)
+		if (current_list[i] === route_dict.end)
 		{
 			found = true;
-			idx = j;
+			idx = i;
 		}
 	}
 
@@ -107,7 +107,20 @@ function updateRoute(current_list, route_dict)
 	}
 	else
 	{
-		next_node = current_list[1];
+		if (current_list.length > 2)
+		{
+			for (var j = 1; j < current_list.length; j++)
+			{
+				if ( !route_dict.path.containsUnsorted(current_list[j]) )
+				{
+					next_node = current_list[j];
+				}
+			}
+		}
+		else
+		{
+				next_node = current_list[1];
+		}
 	}
 
 	return next_node;
@@ -121,7 +134,10 @@ function router(route_dict, nodes)
 	 */
 
 	/*
-	TODO - still producing cycles in some cases
+	TODO - still producing cycles in some cases. Because polygons overlap, the routing
+	function will get stuck jumping between two polygons in certain cases. Need to fix
+	by checking first whether the adjacency set for a given next_list is already contained
+	in the current path before using it.
 	 */
 
 	var current_node = route_dict.start;
@@ -139,29 +155,36 @@ function router(route_dict, nodes)
 
 			if (nodes[current_node].dat.properties.next[i][0].containsUnsorted(route_dict.end))
 			{
+				/*
+				TODO - check for cycles here
+				 */
 				current_list = nodes[current_node].dat.properties.next[i];
 				next_node = updateRoute(current_list, route_dict);
-				route_dict.path.push(next_node);
-				current_node = next_node;
-				break;
+
+				if (!route_dict.path.containsUnsorted(next_node))
+				{
+					route_dict.path.push(next_node);
+					current_node = next_node;
+					break;
+				}
 			}
 			/*
 			Then test if the destination nodes is inside the polygon represented by the vertices.
 			 */
 			else
 			{
-
-				var k;
-
+				/*
+				TODO - check for cycles here
+				 */
 				var nextLength = nodes[current_node].dat.properties.next[i][0].length;
 
 				if (nextLength > 2)
 				{
-					var nextCoords = [];
 
-					for (k = 0; k < nextLength; k++)
+					var nextCoords = [];
+					for (var j = 0; j < nextLength; j++)
 					{
-						var vertNode = nodes[current_node].dat.properties.next[i][0][k];
+						var vertNode = nodes[current_node].dat.properties.next[i][0][j];
 						nextCoords.push(nodes[vertNode].dat.coordinates);
 					}
 
@@ -169,9 +192,13 @@ function router(route_dict, nodes)
 					{
 						current_list = nodes[current_node].dat.properties.next[i];
 						next_node = updateRoute(current_list, route_dict);
-						route_dict.path.push(next_node);
-						current_node = next_node;
-						break;
+
+						if (!route_dict.path.containsUnsorted(next_node))
+						{
+							route_dict.path.push(next_node);
+							current_node = next_node;
+							break;
+						}
 					}
 				}
 			}

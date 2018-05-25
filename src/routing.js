@@ -64,6 +64,22 @@ function router(routeDict, nodes)
 	Follow adjacent nodes from routing table until destination is reached.
 	 */
 
+	/*
+	TODO - route making fails when it goes through a set of nodes that are clustered close together,
+	probably due to several polygons overlapping one another. Need to handle cases where the route
+	closes in on itself and runs out of places to go (since it can't select nodes that it already
+	selected in order to prevent cycles). One way to do this would be detect it and go back to the
+	most recent 'safe' spot, and continue building the path from there while intentionally not taking
+	the incorrect steps it took before.
+	 */
+
+	/*
+	TODO - related to above - resulting path is not optimal is most cases, because several turns from
+	a given node represent the same destination node. One way to choose the most optimal path would be
+	to build each path when the possible paths diverge in this way, and select the shortest path when
+	all are done being built.
+	 */
+
 	var currentNode = routeDict.start;
 	var foundNext;
 
@@ -139,7 +155,6 @@ function router(routeDict, nodes)
 			alert("Destination is unreachable from that point.");
 			break;
 		}
-		
 
 	}
 

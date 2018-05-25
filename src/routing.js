@@ -1,6 +1,6 @@
 
 var nodes = [];
-var node_idx = 0;
+var nodeIdx = 0;
 var clicks = 0;
 var route =
 {
@@ -10,19 +10,22 @@ var route =
 };
 
 
-function updateRoute(current_list, route_dict)
+function updateRoute(adjacencyList, routeDict)
 {
+	/*
+	Select next node in route, given a list of adjacent nodes.
+	 */
 	var found = false;
-	var next_node;
+	var nextNode;
 	var idx;
 
 	/*
 	Some entries have more than one adjacent node that correspond the same path.
 	If one of those nodes is the destination node, select it. Else, take either.
 	 */
-	for (var i = 1; i < current_list.length; i++)
+	for (var i = 1; i < adjacencyList.length; i++)
 	{
-		if (current_list[i] === route_dict.end)
+		if (adjacencyList[i] === routeDict.end)
 		{
 			found = true;
 			idx = i;
@@ -31,61 +34,66 @@ function updateRoute(current_list, route_dict)
 
 	if (found)
 	{
-		next_node = current_list[idx];
+		nextNode = adjacencyList[idx];
 	}
 	else
 	{
-		if (current_list.length > 2)
+		if (adjacencyList.length > 2)
 		{
-			for (var j = 1; j < current_list.length; j++)
+			for (var j = 1; j < adjacencyList.length; j++)
 			{
-				if ( !route_dict.path.containsUnsorted(current_list[j]) )
+				if ( !routeDict.path.containsUnsorted(adjacencyList[j]) )
 				{
-					next_node = current_list[j];
+					nextNode = adjacencyList[j];
 				}
 			}
 		}
 		else
 		{
-				next_node = current_list[1];
+				nextNode = adjacencyList[1];
 		}
 	}
 
-	return next_node;
+	return nextNode;
 }
 
 
-function router(route_dict, nodes)
+function router(routeDict, nodes)
 {
 	/*
 	Follow adjacent nodes from routing table until destination is reached.
 	 */
 
-	var current_node = route_dict.start;
+	var currentNode = routeDict.start;
+	var foundNext;
 
-	while (current_node !== route_dict.end)
+	while (currentNode !== routeDict.end)
 	{
-		for (var i = 0; i < nodes[current_node].dat.properties.next.length; i++)
+
+		foundNext = false;
+
+		for (var i = 0; i < nodes[currentNode].dat.properties.next.length; i++)
 		{
 			/*
 			First check all nodes in next set to rule out destination nodes that are vertices.
 			 */
-			var current_list;
-			var next_node;
-			var destCoords = nodes[route_dict.end].dat.coordinates;
+			var adjacencyList;
+			var nextNode;
+			var destCoords = nodes[routeDict.end].dat.coordinates;
 
-			if (nodes[current_node].dat.properties.next[i][0].containsUnsorted(route_dict.end))
+			if (nodes[currentNode].dat.properties.next[i][0].containsUnsorted(routeDict.end))
 			{
-				current_list = nodes[current_node].dat.properties.next[i];
-				next_node = updateRoute(current_list, route_dict);
+				adjacencyList = nodes[currentNode].dat.properties.next[i];
+				nextNode = updateRoute(adjacencyList, routeDict);
 
 				/*
 				Check if path already includes this node (eliminates cycles).
 				 */
-				if (!route_dict.path.containsUnsorted(next_node))
+				if (!routeDict.path.containsUnsorted(nextNode))
 				{
-					route_dict.path.push(next_node);
-					current_node = next_node;
+					foundNext = true;
+					routeDict.path.push(nextNode);
+					currentNode = nextNode;
 					break;
 				}
 			}
@@ -94,7 +102,7 @@ function router(route_dict, nodes)
 			 */
 			else
 			{
-				var nextLength = nodes[current_node].dat.properties.next[i][0].length;
+				var nextLength = nodes[currentNode].dat.properties.next[i][0].length;
 
 				if (nextLength > 2)
 				{
@@ -102,36 +110,40 @@ function router(route_dict, nodes)
 					var nextCoords = [];
 					for (var j = 0; j < nextLength; j++)
 					{
-						var vertNode = nodes[current_node].dat.properties.next[i][0][j];
+						var vertNode = nodes[currentNode].dat.properties.next[i][0][j];
 						nextCoords.push(nodes[vertNode].dat.coordinates);
 					}
 
 					if (nextCoords.containsPoly(destCoords))
 					{
-						current_list = nodes[current_node].dat.properties.next[i];
-						next_node = updateRoute(current_list, route_dict);
+						adjacencyList = nodes[currentNode].dat.properties.next[i];
+						nextNode = updateRoute(adjacencyList, routeDict);
 
 						/*
 						Check if path already includes this node (eliminates cycles).
 						 */
-						if (!route_dict.path.containsUnsorted(next_node))
+						if (!routeDict.path.containsUnsorted(nextNode))
 						{
-							route_dict.path.push(next_node);
-							current_node = next_node;
+							foundNext = true;
+							routeDict.path.push(nextNode);
+							currentNode = nextNode;
 							break;
 						}
 					}
 				}
 			}
 		}
-		if (i === nodes[current_node].dat.properties.next.length && route_dict.path.containsUnsorted(current_node))
+
+		if (!foundNext)
 		{
 			alert("Destination is unreachable from that point.");
 			break;
 		}
+		
+
 	}
 
-	return route_dict.path;
+	return routeDict.path;
 }
 
 function pointLayer(feature, latlng)
@@ -143,10 +155,10 @@ function pointLayer(feature, latlng)
 		{radius:4, weight:0.1, fillColor:"#FFFFFF", color:"#FFFFFF", opacity:1, fillOpacity:1}
 	);
 
-	nodes.push({'dat':feature, 'vis':node, 'idx': node_idx});
-	node.nodeid = node_idx;
+	nodes.push({'dat':feature, 'vis':node, 'idx': nodeIdx});
+	node.nodeid = nodeIdx;
 
-	node_idx++;
+	nodeIdx++;
 
 
 	node.on('click', function()

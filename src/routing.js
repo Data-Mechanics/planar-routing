@@ -80,6 +80,18 @@ function router(routeDict, nodes)
 	all are done being built.
 	 */
 
+	/*
+	TODO - might also just be easiest to recompute the polygon vertices such that each nextList contains
+	the minimal number of vertices such that it doesn't overlap with the other polygons in the nextList,
+	but that algorithm would have to be written from scratch.
+	 */
+
+	/*
+	TODO - could also check to see if the length of currentNode's nextList is 1, which would
+	indicate that there is only one step that can be taken from currentNode. Then take that step
+	and ignore all the polygon testing stuff.
+	 */
+
 	var currentNode = routeDict.start;
 	var foundNext;
 

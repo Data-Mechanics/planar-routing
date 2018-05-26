@@ -67,7 +67,7 @@ Array.prototype.containsPoly = function(needle)
 
 	Returns how many times (mod 2) a line from the test point crosses the edges
 	of the polygon. Even intersections (0) mean the point is outside the polygon,
-	while odd intersections (1) indicate that the point is inside
+	while odd intersections (1) indicate that the point is inside.
 	 */
 
 	var numVert = this.length;
